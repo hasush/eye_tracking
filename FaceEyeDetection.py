@@ -41,7 +41,7 @@ class FaceEyeDetection(object):
 		print(filePath)
 
 		# Read the image.
-		self.image = cv2.imread(filePath)
+		image = cv2.imread(filePath)
 
 		# plt.imshow(self.image)
 		# plt.show()
@@ -49,67 +49,86 @@ class FaceEyeDetection(object):
 		# print(type(self.image))
 		# print(self.image.shape)
 
+		# If we are to crop the faces.
 		if cropsFaces:
-			self.image = self.image[150:, 400:800, :]
+			image = image[150:, 400:800, :]
 
-	def convertBgrImageToGray(self):
+		return image
+
+	def convertBgrImageToGray(self, image):
 		""" Convert an BGR image to a gray scale image """
 
 		# Convert the image.
-		self.imageGray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+		imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+		return imageGray
 		
-	def detectFaces(self):
+	def detectFaces(self, image, imageGray):
 		""" Function to detect face given that it exists on disk. """
 
 		# Detect faces within the image.
-		self.facesCoords = self.face_cascade.detectMultiScale(self.imageGray, scaleFactorFaces, minNeighborsFaces)
+		facesCoords = self.face_cascade.detectMultiScale(imageGray, scaleFactorFaces, minNeighborsFaces)
 
 		# Check to make sure a face was detected.
-		if len(self.facesCoords) < 1:
+		if len(facesCoords) < 1:
 			return False
 		else:
-			return True
+			return facesCoords
 
-	def detectEyesInFace(self):
+		# Get all the faces and put in a list.
+		faces = []
+
+		# Loop over the coordinates of the faces.
+		for face in faceCoords:
+
+			# Obtain coords of the face.
+			(x,y,w,h) = face[0]
+
+			# Get ROIs of the face.
+			facesRoiGray = imageGray[y:y+h, x:x+w]
+			facesRoiColor = image[y:y+h, x:x+w]
+
+
+	def detectTwoEyesInFace(self, facesCoords, imageGray, image):
 		""" Detect eyes contained in the faces """
 
-		# Check to make sure only one face.
-		# assert len(self.facesCoords) == 1
-		if len(self.facesCoords) < 1:
-			return
-
-		# Reset the face ROIs and eyes.
-		self.eyesCoords = []
-		self.facesRoiGray = []
-		self.facesRoiColor = []
+		# Check to make sure only one face.		
+		if len(facesCoords) < 1:
+			return False
 
 		# Obtain coords of the face.
-		(x,y,w,h) = self.facesCoords[0]
+		(x,y,w,h) = facesCoords[0]
 
 		# Get ROIs of the face.
-		self.facesRoiGray.append(self.imageGray[y:y+h, x:x+w])
-		self.facesRoiColor.append(self.image[y:y+h, x:x+w])
+		facesRoiGray = imageGray[y:y+h, x:x+w]
+		facesRoiColor = image[y:y+h, x:x+w]
 
 		# Find the eyes of the current ROI.
-		self.eyesCoords.append(self.eye_cascade.detectMultiScale(self.facesRoiGray[0], scaleFactorEyes, minNeighborsEyes))
+		eyesCoords = self.eye_cascade.detectMultiScale(facesRoiGray[0], scaleFactorEyes, minNeighborsEyes)
 
 		# Make sure only one set of eyes and that the set contains two eyes.
-		if len(self.eyesCoords) != 1 or len(self.eyesCoords[0]) != 2:
-			self.facesRoiGray.pop()
-			self.facesRoiColor.pop()
-			return
+		if len(eyesCoords) != 1 or len(eyesCoords[0]) != 2:
+			return False
 
-		assert len(self.eyesCoords) == 1
-		assert len(self.eyesCoords[0]) == 2
+		assert len(eyesCoords) == 1
+		assert len(eyesCoords[0]) == 2
+
+		# Instantiate containers to hold the ROIs of the eyes.
+		eyesRoiGray = []
+		eyesRoiColor = []
 
 		# Loop over coordinates of the eyes.
-		for (ex, ey, ew, eh) in self.eyesCoords[0]:
+		for (ex, ey, ew, eh) in eyesCoords:
 
 			# Get the ROIs of the eyes.
-			self.eyesRoiGray.append(self.imageGray[y+ey:y+ey+eh,x+ex:x+ex+ew])
-			self.eyesRoiColor.append(self.image[y+ey:y+ey+eh,x+ex:x+ex+ew])
+			eyesRoiGray.append(imageGray[y+ey:y+ey+eh,x+ex:x+ex+ew])
+			eyesRoiColor.append(image[y+ey:y+ey+eh,x+ex:x+ex+ew])
 
-	def drawRectanglesOnEyesAndFace(self):
+		return facesRoiGray, facesRoiColor, eyeCoords, eyesRoiGray, eyesRoiColor
+
+
+
+	def drawRectanglesOnEyesAndFaces(self):
 		""" Detect eyes contained in the faces """
 
 		# Reset the face ROIs and eyes.
