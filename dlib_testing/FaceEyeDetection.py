@@ -1,5 +1,7 @@
-import sys
+
 from copy import deepcopy
+from collections import OrderedDict
+import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,9 +10,6 @@ import dlib
 import cv2
 import imutils
 
-
-
-import helper_functions
 
 shape_predictor_68_face_landmarks = '/home/gsandh16/Downloads/shape_predictor_68_face_landmarks.dat'
 
@@ -23,6 +22,15 @@ class FaceEyeDetection(object):
 		self.faceDetector = dlib.get_frontal_face_detector()
 		self.landmarkPredictor = dlib.shape_predictor(shape_predictor_68_face_landmarks)
 		self.faceDetectionPyramidFactor = 1
+		self.FACIAL_LANDMARKS_IDXS = OrderedDict([
+													("mouth", (48, 68)),
+													("right_eyebrow", (17, 22)),
+													("left_eyebrow", (22, 27)),
+													("right_eye", (36, 42)),
+													("left_eye", (42, 48)),
+													("nose", (27, 36)),
+													("jaw", (0, 17))
+												])
 
 	def readImage(self, imageFilePath):
 		image = cv2.imread(imageFilePath)
@@ -160,7 +168,11 @@ class FaceEyeDetection(object):
 
 		# Get all of the detected faces within the image.
 		faceCoordsAll = self.obtainFaceCoordsAll(grayImage)
-		assert len(faceCoordsAll) == 1
+
+		# Check to see if only one face was detected.
+		if len(faceCoordsAll) != 1:
+			print("Length of faceCoordsAll is ", len(faceCoordsAll))
+			return False
 
 		# Squeeze the array.
 		print(faceCoordsAll)
@@ -182,6 +194,151 @@ class FaceEyeDetection(object):
 		rightEyeCoords = self.obtainEyeCoords(landmarks, 'right')
 
 		return faceCoords, leftEyeCoords, rightEyeCoords
+
+	def showImagesOfFaceAndEyes(self, imageFile):
+
+		faceRectangleExpansion = 0.20
+		eyeRectangleHeightExpansion = 1.0
+		eyeRectangleWidthExpansion = 0.3
+
+		# Read in the image.
+		image = self.readImage(imageFile)
+
+		plt.imshow(image)
+		plt.show()
+
+		# Extract the face and eye coordinates.
+		returnValue = self.extractSingleFaceAndEyeCoordsFromImage(image)
+		if returnValue != False:
+			faceCoords, leftEyeCoords, rightEyeCoords = returnValue
+		else:
+			return False
+
+		# Expand the coordinates of the rectangles.
+		faceCoords = self.expandCoords(faceCoords, faceRectangleExpansion, faceRectangleExpansion)
+		leftEyeCoords = self.expandCoordsMakeRatioEven(leftEyeCoords, eyeRectangleWidthExpansion)
+		rightEyeCoords = self.expandCoordsMakeRatioEven(rightEyeCoords, eyeRectangleWidthExpansion)
+
+		# Get the subparts of the images corresponding to the rectangles.
+		faceImage, leftEyeImage, rightEyeImage = self.getImagePartsFromCoords(image, faceCoords, leftEyeCoords, rightEyeCoords)
+
+		# Resize.
+		faceImage = cv2.resize(faceImage, (512, 512))
+		leftEyeImage = cv2.resize(leftEyeImage, (256, 256))
+		rightEyeImage = cv2.resize(rightEyeImage, (256, 256))
+
+		plt.figure()
+		plt.imshow(faceImage, cmap='jet')
+		
+		plt.figure()
+		plt.imshow(leftEyeImage, cmap='gray')
+
+		plt.figure()
+		plt.imshow(rightEyeImage, cmap='gray')
+
+		plt.show()
+
+	def extractImagesOfFaceAndEyes(self, imageFile):
+
+		faceRectangleExpansion = 0.20
+		eyeRectangleHeightExpansion = 1.0
+		eyeRectangleWidthExpansion = 0.3
+
+		# Read in the image.
+		image = self.readImage(imageFile)
+
+		# Extract the face and eye coordinates.
+		returnValue = self.extractSingleFaceAndEyeCoordsFromImage(image)
+		if returnValue != False:
+			faceCoords, leftEyeCoords, rightEyeCoords = returnValue
+		else:
+			return False
+
+		# Expand hte coordinates of the rectangles.
+		faceCoords = self.expandCoords(faceCoords, faceRectangleExpansion, faceRectangleExpansion)
+		leftEyeCoords = self.expandCoordsMakeRatioEven(leftEyeCoords, eyeRectangleWidthExpansion)
+		rightEyeCoords = self.expandCoordsMakeRatioEven(rightEyeCoords, eyeRectangleWidthExpansion)
+
+		# Get the subparts of the images corresponding to the rectangles.
+		faceImage, leftEyeImage, rightEyeImage = self.getImagePartsFromCoords(image, faceCoords, leftEyeCoords, rightEyeCoords)
+
+		# Resize.
+		faceImage = cv2.resize(faceImage, (512, 512))
+		leftEyeImage = cv2.resize(leftEyeImage, (256, 256))
+		rightEyeImage = cv2.resize(rightEyeImage, (256, 256))
+
+		return faceImage, leftEyeImage, rightEyeImage
+
+	def loopThroughImagesUntilAssertionError(self, imageDir, numberImages):
+		""" Tests to see how many images do not detect 1 face. """
+
+		# Counters to see how many times extraction was or was not successful.
+		numTrue = 0
+		numFalse = 0
+
+		# Loop though images until we reach the end.
+		index = 0
+		while index < numberImages:
+
+			# Get the string of the picture index, i.e. '12456' for '12456.png'.
+			numStr = '%05d'%index
+
+			# Concatenate the image path.
+			imageFile = imageDir + numStr + '.png'
+			
+			# Info.
+			print(imageFile)
+
+			# Extract images.
+			returnValue = self.extractImagesOfFaceAndEyes(imageFile)
+
+			# Increment counters to see if extraction was or was not sucessful.
+			if returnValue == False:
+				numFalse +=1
+			else:
+				numTrue +=1
+
+			# Go to the next image.
+			index +=1
+
+			print("Current ratio -- true/false: ", numTrue/float(index),'/',numFalse/float(index))
+
+	def saveFaceAndEyes(self, imageDir, outfileDir, numberImages):
+
+		# Counters to see how many times extraction was or was not successful.
+		numTrue = 0
+		numFalse = 0
+		
+		# Loop though images until we reach the end.
+		index = 0
+		while index < numberImages:
+
+			# Get the string of the picture index, i.e. '12456' for '12456.png'.
+			numStr = '%05d'%index
+
+			# Concatenate the image path.
+			imageFile = imageDir + numStr + '.png'
+			
+			# Info.
+			print(imageFile)
+
+			# Extract images.
+			returnValue = self.extractImagesOfFaceAndEyes(imageFile)
+
+			# Increment counters to see if extraction was or was not sucessful.
+			if returnValue == False:
+				numFalse +=1
+			else:
+				numTrue +=1
+
+				outfile = outfileDir + numStr + '.npz' 
+				np.savez(outfile, faceImage=returnValue[0], leftEyeImage=returnValue[1], rightEyeImage=returnValue[2])
+
+			# Go to the next image.
+			index +=1
+
+			print("Current ratio -- true/false: ", numTrue/float(index),'/',numFalse/float(index))
+
 
 	def getImagePartsFromCoords(self, image, faceCoords, leftEyeCoords, rightEyeCoords):
 
@@ -231,6 +388,36 @@ class FaceEyeDetection(object):
 		return (xMinus, yMinus, wNew, hNew)
 
 
+	def expandCoordsMakeRatioEven(self, coords, xExpand):
+
+		# Get the coordinates.
+		x = coords[0]
+		y = coords[1]
+		w = coords[2]
+		h = coords[3]
+
+		# Make the rectangle bigger to accomodate the area surrounding the eyes.
+		xPlus = int(x+w+float(w)*xExpand)
+		xMinus = int(x - float(w)*xExpand)
+		wNew = xPlus-xMinus
+		hNew = wNew
+
+		if hNew <= h:
+			print("The height must be greater than the current height.")
+			sys.exit()
+
+		difference = hNew-h
+
+		if difference%2 == 0:
+			yMinus = y - difference//2
+			yPlus = y + h + difference//2
+		else:
+			yMinus = y - difference//2
+			yPlus = y + h + difference//2 + 1
+
+		return (xMinus, yMinus, wNew, hNew)	
+
+
 	def convertDlibRectangleToOpencvCoords(self, rectangle):
 		""" 
 			Convert the member variables of Dlib's rectangle to
@@ -269,6 +456,8 @@ class FaceEyeDetection(object):
 			coordinates[i] = (landmarks.part(i).x, landmarks.part(i).y)
 
 		return coordinates
+
+
 
 
 

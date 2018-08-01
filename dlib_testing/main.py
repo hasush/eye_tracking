@@ -13,10 +13,10 @@ from FaceEyeDetection import FaceEyeDetection
 
 
 # image_file = '/home/gsandh16/Documents/gazeTracking/data/einstein.jpg'
-imageFile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/00000.png'
+imageFile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/00063.png'
 # imageFile = '/home/gsandh16/Documents/gazeTracking/data/randomFamily.jpeg'
 
-faceRectangleExpansion = 0.4
+faceRectangleExpansion = 0.20
 eyeRectangleHeightExpansion = 1.0
 eyeRectangleWidthExpansion = 0.33
 
@@ -28,33 +28,30 @@ def main():
 	# # Draw rectangles on the faces and eyes within an image.
 	# fed.drawRectanglesOnFacesAndEyes(imageFile)
 
-	# Read in the image.
-	image = fed.readImage(imageFile)
+	# # Extract face and eye regions and then display.
+	# fed.showImagesOfFaceAndEyes(imageFile)
 
+	# fed.loopThroughImagesUntilAssertionError('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/', 39006)
 
-	faceCoords, leftEyeCoords, rightEyeCoords = fed.extractSingleFaceAndEyeCoordsFromImage(image)
+	# returnValue = fed.extractImagesOfFaceAndEyes(imageFile)
 
-	faceCoords = fed.expandCoords(faceCoords, faceRectangleExpansion, faceRectangleExpansion)
-	leftEyeCoords = fed.expandCoords(leftEyeCoords, eyeRectangleWidthExpansion, eyeRectangleHeightExpansion)
-	rightEyeCoords = fed.expandCoords(rightEyeCoords, eyeRectangleWidthExpansion, eyeRectangleHeightExpansion)
+	# print(type(returnValue[0]))
+	# print(returnValue[0].shape)
 
-	faceImage, leftEyeImage, rightEyeImage = fed.getImagePartsFromCoords(image, faceCoords, leftEyeCoords, rightEyeCoords)
+	# plt.imshow(returnValue[1])
+	# plt.show()
 
-	faceImage = fed.resizeImage(faceImage, 512, 512)
-	leftEyeImage = cv2.resize(leftEyeImage, (256, 171))
-	rightEyeImage = cv2.resize(rightEyeImage, (256, 171))
+	# outfile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/test.npz' 
+	# np.savez(outfile, faceImage=returnValue[0], leftEyeImage=returnValue[1], rightEyeImage=returnValue[2])
 
-	plt.figure()
-	plt.imshow(faceImage)
-	
-	plt.figure()
-	plt.imshow(leftEyeImage)
+	# asdf = np.load(outfile)
 
-	plt.figure()
-	plt.imshow(rightEyeImage)
+	# plt.imshow(asdf['faceImage'])
+	# plt.show()
 
-	plt.show()
-
+	imageDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/'
+	outfileDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/'
+	fed.saveFaceAndEyes(imageDir, outfileDir, 10)
 if __name__ == '__main__':
 	main()
 
