@@ -12,8 +12,9 @@ import imutils
 from FaceEyeDetection import FaceEyeDetection
 
 
-# image_file = '/home/gsandh16/Documents/gazeTracking/data/einstein.jpg'
-imageFile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/00063.png'
+# imageFile = '/home/gsandh16/Documents/gazeTracking/data/einstein.jpg'
+# imageFile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/00063.png'
+imageFile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/00000.png'
 # imageFile = '/home/gsandh16/Documents/gazeTracking/data/randomFamily.jpeg'
 
 faceRectangleExpansion = 0.20
@@ -38,7 +39,15 @@ def main():
 	# print(type(returnValue[0]))
 	# print(returnValue[0].shape)
 
+	
+	# plt.figure()
+	# plt.imshow(returnValue[0])
+	# plt.figure()
 	# plt.imshow(returnValue[1])
+	# plt.figure()
+	# plt.imshow(returnValue[2])
+	# plt.figure()
+	# plt.imshow(returnValue[3])
 	# plt.show()
 
 	# outfile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/test.npz' 
@@ -51,7 +60,7 @@ def main():
 
 	imageDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/'
 	outfileDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/'
-	fed.saveFaceAndEyes(imageDir, outfileDir, 10)
+	fed.saveFaceAndEyes(imageDir, outfileDir, 1000)
 if __name__ == '__main__':
 	main()
 

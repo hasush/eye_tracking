@@ -210,7 +210,7 @@ class FaceEyeDetection(object):
 		# Extract the face and eye coordinates.
 		returnValue = self.extractSingleFaceAndEyeCoordsFromImage(image)
 		if returnValue != False:
-			faceCoords, leftEyeCoords, rightEyeCoords = returnValue
+			faceCoords, leftEyeCoords, rightEyeCoords, binaryOverlap = returnValue
 		else:
 			return False
 
@@ -238,6 +238,72 @@ class FaceEyeDetection(object):
 
 		plt.show()
 
+	def turnImageIntoSquare(self, image):
+		### ASDF -> Untested for all combos of height/width (even/odd)
+		height, width, depth = image.shape
+		if height > width:
+			difference = height-width
+			if difference%2 == 0:
+				image = image[difference//2:-difference//2, :]
+			else:
+				image = image[difference//2:-difference//2+1,:]
+		elif height < width:
+			difference = width-height
+			if difference%2 == 0:
+				image = image[:, difference//2:-difference//2]
+				# image = image[height//2:-height//2, height//2:-height//2]
+			else:				
+				image = image[:, difference//2:-difference//2]
+
+		return image
+
+	def computeBinaryOverlap(self, image, faceCoords, leftEyeCoords=None, rightEyeCoords=None):
+		""" Compute the overlap between the image and the face coordinates """
+
+		# Obtain the shape.
+		height, width, depth = image.shape
+
+		# Allocate array of zeros.
+		binaryOverlap = np.zeros((height, width, 1))
+
+		# Obtain face coordinates.
+		x = faceCoords[0]
+		y = faceCoords[1]
+		w = faceCoords[2]
+		h = faceCoords[3]
+
+		# Set the face coordinates to 1.
+		binaryOverlap[y:y+h, x:x+w] = 1.0
+
+		# if leftEyeCoords == None and rightEyeCoords == None:
+		# 	return binaryOverlap
+		# else:
+		
+		# 	# Obtain face coordinates.
+		# 	x = leftEyeCoords[0]
+		# 	y = leftEyeCoords[1]
+		# 	w = leftEyeCoords[2]
+		# 	h = leftEyeCoords[3]
+		# 	print('left eye coords: ',leftEyeCoords)
+
+
+		# 	# Set the face coordinates to 2.
+		# 	binaryOverlap[y:y+h, x:x+w] = 1.0
+
+		# 	# Obtain face coordinates.
+		# 	x = rightEyeCoords[0]
+		# 	y = rightEyeCoords[1]
+		# 	w = rightEyeCoords[2]
+		# 	h = rightEyeCoords[3]
+		# 	print('right eye coords: ',rightEyeCoords)
+		# 	print('x y w h',x, ' ',y,' ', w, ' ', h)
+		# 	# Set the face coordinates to 2.
+		# 	print('max value: ', np.max(binaryOverlap))
+		# 	binaryOverlap[y:y+h, x:x+w] = 1.0
+		# 	print('max value: ', np.max(binaryOverlap))
+
+		return binaryOverlap
+
 	def extractImagesOfFaceAndEyes(self, imageFile):
 
 		faceRectangleExpansion = 0.20
@@ -247,6 +313,9 @@ class FaceEyeDetection(object):
 		# Read in the image.
 		image = self.readImage(imageFile)
 
+		# Make the image square. Based on if the height or width is bigger, crop the image.
+		image = self.turnImageIntoSquare(image)
+
 		# Extract the face and eye coordinates.
 		returnValue = self.extractSingleFaceAndEyeCoordsFromImage(image)
 		if returnValue != False:
@@ -254,7 +323,10 @@ class FaceEyeDetection(object):
 		else:
 			return False
 
-		# Expand hte coordinates of the rectangles.
+		# Compute the binary overlap.
+		binaryOverlap = self.computeBinaryOverlap(image, faceCoords, leftEyeCoords, rightEyeCoords)
+
+		# Expand the coordinates of the rectangles.
 		faceCoords = self.expandCoords(faceCoords, faceRectangleExpansion, faceRectangleExpansion)
 		leftEyeCoords = self.expandCoordsMakeRatioEven(leftEyeCoords, eyeRectangleWidthExpansion)
 		rightEyeCoords = self.expandCoordsMakeRatioEven(rightEyeCoords, eyeRectangleWidthExpansion)
@@ -266,8 +338,9 @@ class FaceEyeDetection(object):
 		faceImage = cv2.resize(faceImage, (512, 512))
 		leftEyeImage = cv2.resize(leftEyeImage, (256, 256))
 		rightEyeImage = cv2.resize(rightEyeImage, (256, 256))
+		binaryOverlap = cv2.resize(binaryOverlap, (16,16))
 
-		return faceImage, leftEyeImage, rightEyeImage
+		return faceImage, leftEyeImage, rightEyeImage, binaryOverlap
 
 	def loopThroughImagesUntilAssertionError(self, imageDir, numberImages):
 		""" Tests to see how many images do not detect 1 face. """
@@ -308,7 +381,7 @@ class FaceEyeDetection(object):
 		# Counters to see how many times extraction was or was not successful.
 		numTrue = 0
 		numFalse = 0
-		
+
 		# Loop though images until we reach the end.
 		index = 0
 		while index < numberImages:
@@ -332,7 +405,7 @@ class FaceEyeDetection(object):
 				numTrue +=1
 
 				outfile = outfileDir + numStr + '.npz' 
-				np.savez(outfile, faceImage=returnValue[0], leftEyeImage=returnValue[1], rightEyeImage=returnValue[2])
+				np.savez(outfile, faceImage=returnValue[0], leftEyeImage=returnValue[1], rightEyeImage=returnValue[2], binaryOverlap=returnValue[3])
 
 			# Go to the next image.
 			index +=1
