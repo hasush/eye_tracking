@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ import imutils
 
 
 from FaceEyeDetection import FaceEyeDetection
+from DataUtils import DataUtils
 
 
 # imageFile = '/home/gsandh16/Documents/gazeTracking/data/einstein.jpg'
@@ -58,9 +60,20 @@ def main():
 	# plt.imshow(asdf['faceImage'])
 	# plt.show()
 
-	imageDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/'
-	outfileDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/'
-	fed.saveFaceAndEyes(imageDir, outfileDir, 1000)
+	# imageDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/'
+	# outfileDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/'
+	# fed.saveFaceAndEyes(imageDir, outfileDir, 1000)
+
+	imageInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/')
+	labelInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/')
+	dataFileDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_data/')
+	du = DataUtils(imageInputDir, labelInputDir, dataFileDir)
+
+	
+	du.loadFaceEyesLabelsSmallFiles(save=True)
+	du.loadLabels()
+
+
 if __name__ == '__main__':
 	main()
 

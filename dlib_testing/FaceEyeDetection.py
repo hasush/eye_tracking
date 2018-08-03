@@ -414,6 +414,7 @@ class FaceEyeDetection(object):
 
 
 	def getImagePartsFromCoords(self, image, faceCoords, leftEyeCoords, rightEyeCoords):
+		""" For an image, get the different subimages of the face and eyes. """
 
 		# Make a copy of the image.
 		tmp_image = deepcopy(image)
@@ -462,6 +463,8 @@ class FaceEyeDetection(object):
 
 
 	def expandCoordsMakeRatioEven(self, coords, xExpand):
+		""" Obtain a larger bounding box as represented by the coordinates.
+		    However, make the """
 
 		# Get the coordinates.
 		x = coords[0]
