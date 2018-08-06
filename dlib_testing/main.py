@@ -31,8 +31,8 @@ def main():
 	# # Draw rectangles on the faces and eyes within an image.
 	# fed.drawRectanglesOnFacesAndEyes(imageFile)
 
-	# # Extract face and eye regions and then display.
-	# fed.showImagesOfFaceAndEyes(imageFile)
+	# Extract face and eye regions and then display.
+	fed.showImagesOfFaceAndEyes(imageFile)
 
 	# fed.loopThroughImagesUntilAssertionError('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/', 39006)
 
@@ -64,14 +64,14 @@ def main():
 	# outfileDir = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/'
 	# fed.saveFaceAndEyes(imageDir, outfileDir, 1000)
 
-	imageInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/')
-	labelInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/')
-	dataFileDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_data/')
-	du = DataUtils(imageInputDir, labelInputDir, dataFileDir)
+	# imageInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_extracted/')
+	# labelInputDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/')
+	# dataFileDir = os.path.normpath('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2_data/')
+	# du = DataUtils(imageInputDir, labelInputDir, dataFileDir)
 
 	
-	du.loadFaceEyesLabelsSmallFiles(save=True)
-	du.loadLabels()
+	# du.loadFaceEyesLabelsSmallFiles(save=True)
+	# du.loadLabels()
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ class DataUtils(object):
 		 	as batches. 
 
 			@param save Whether to save the data or not.
-		 """
+		"""
 
 		# Directory path to where the images are located.
 		imageInputDir = os.path.normpath(self.imageInputDir)
@@ -136,11 +136,23 @@ class DataUtils(object):
 			counter+=1
 
 	def normalizeImage(self, image):
+		""" Normalize the image pixels. 
+			@param image The image to be normalized.
+
+			@return A normalized image.
+		"""
+
+		# Choose normalization metho. TO DO: Put into config file.
 		# return self.meanSubtractChannelNormalizeImage(image)
 		# return self.rangeZeroToOneNormalizeImage(image)
 		return self.divideBy255NormalizeImage(image)
 
 	def meanSubtractChannelNormalizeImage(self, image):
+		"""	Subtract the mean from each channel of the image.
+			@param image the Image to be normalized.
+
+			@return newImage The normalized image.
+		"""
 
 		# Obtain shape of the image.
 		shape = image.shape
@@ -161,6 +173,11 @@ class DataUtils(object):
 		return newImage
 
 	def rangeZeroToOneNormalizeImage(self, image):
+		"""	Make the pixel values range from 0 to 1.
+			@param image the Image to be normalized.
+
+			@return newImage The normalized image.
+		"""
 
 		# Obtain shape of the image.
 		shape = image.shape
@@ -181,6 +198,11 @@ class DataUtils(object):
 		return newImage
 
 	def divideBy255NormalizeImage(self, image):
+		"""	Normalize image by dividing each pixel by 255.
+			@param image the Image to be normalized.
+
+			@return newImage The normalized image.
+		"""
 
 		# Obtain shape of the image.
 		shape = image.shape

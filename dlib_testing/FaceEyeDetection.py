@@ -1,4 +1,3 @@
-
 from copy import deepcopy
 from collections import OrderedDict
 import sys
@@ -10,17 +9,17 @@ import dlib
 import cv2
 import imutils
 
-
-shape_predictor_68_face_landmarks = '/home/gsandh16/Downloads/shape_predictor_68_face_landmarks.dat'
-
-
 class FaceEyeDetection(object):
 
 	def __init__(self):
+		""" Initialize the class. """
 
 		# Face detector and landmark predictor.
 		self.faceDetector = dlib.get_frontal_face_detector()
-		self.landmarkPredictor = dlib.shape_predictor(shape_predictor_68_face_landmarks)
+
+		# Path to the data of the model.
+		self.shape_predictor_68_face_landmarks = '/home/gsandh16/Downloads/shape_predictor_68_face_landmarks.dat'
+		self.landmarkPredictor = dlib.shape_predictor(self.shape_predictor_68_face_landmarks)
 		self.faceDetectionPyramidFactor = 1
 		self.FACIAL_LANDMARKS_IDXS = OrderedDict([
 													("mouth", (48, 68)),
@@ -33,37 +32,97 @@ class FaceEyeDetection(object):
 												])
 
 	def readImage(self, imageFilePath):
+		""" Read an image from file to get OpenCV Image.
+			@param imageFilePath Path to the image.
+
+			@return image The image in OpenCV format.
+		"""
+
+
 		image = cv2.imread(imageFilePath)
+
 		return image
 
 	def manuallyCropImage(self, image, rowMinMax, colMinMax):
+		""" Manually crop an image.
+			@param image The image that is to be trimmed.
+			@param rowMinMax Tuple of form (min, max) which defines 
+							 the row index of the image that will be kept.
+			@param colMinMax Tuple of form (min, max) which defines 
+							 the column index of the image that will be kept.
 
+			@return croppedImage A cropped image.
+		"""
+
+		# Obtain the dimensions of the new image.
 		rowMin = rowMinMax[0]
 		rowMax = rowMinMax[1]
 		colMin = colMinMax[0]
 		colMax = colMinMax[1]
 
+		# Make a copy of the image and obtain the sub image of interest.
 		tmp_image = deepcopy(image)
 		croppedImage = tmp_image[rowMin:rowMax,colMin:colMax]
+
 		return croppedImage
 
 	def resizeImage(self, image, width, height):
+		""" Resize an image to a different width and height. 
+			@param image The image to be resized.
+			@param width The width of the new image.
+			@param height THe height of the new image.
+
+			@return resizedImage The resized image.
+		"""
+
+		# Resize the image and return.
 		resizedImage = imutils.resize(image, width=width, height=height)
+
 		return resizedImage
 
 	def convertToGrayScale(self, image):
+		""" Convert an image to grayscale. 
+		    @param image The image to convert. 
+
+		    @return grayImage The grayscale image. 
+		"""
+
 		grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 		return grayImage
 
 	def obtainFaceCoordsAll(self, grayImage):
+		""" Obtain the coordinates of bounding box for face region.
+			@param grayImage The grayscale image.
+
+			@return The coordinates of face bounding box..
+
+		"""
+
+		# Obtain the coordinates of the facial landmarks.
 		faceCoordsAll = self.faceDetector(grayImage, self.faceDetectionPyramidFactor)
+
 		return faceCoordsAll
 
 	def obtainLandMarksOnFace(self, grayImage, faceCoords):
+		""" Obtain the coordinates of the facial landmarks.
+			@param grayImage Image where landmarks will be found.
+			@param faceCoords Coordinates of face bounding box.
+
+			@return landmarks Coordinates of facial landmarks.
+		"""
+
 		landmarks = self.landmarkPredictor(grayImage, faceCoords)
+
 		return landmarks
 
 	def obtainEyeCoords(self, landmarks, eye='right'):
+		""" Obtain bounding box coordinates of the eye.
+			@param landmarks Facial landmarks needed.
+			@param eye Either the 'left' or 'right' eye.
+
+			@return (minX, minY, dx, dy) Tuple for bounding box coords.
+		"""
 
 		tmp_landmarks = deepcopy(landmarks)
 
@@ -102,6 +161,9 @@ class FaceEyeDetection(object):
 		return (minX, minY, dx, dy)
 
 	def drawRectanglesOnFacesAndEyes(self, imageFile):
+		""" Draw rectangles on the faces and eyes on the image.
+			@param imageFile The image to be processed.
+		"""
 
 		# Read in the image.
 		image = self.readImage(imageFile)
@@ -196,6 +258,9 @@ class FaceEyeDetection(object):
 		return faceCoords, leftEyeCoords, rightEyeCoords
 
 	def showImagesOfFaceAndEyes(self, imageFile):
+		""" Show the extracted face and eyes images. 
+			@param imageFile The filepath to the image.
+		"""
 
 		faceRectangleExpansion = 0.20
 		eyeRectangleHeightExpansion = 1.0
@@ -208,7 +273,7 @@ class FaceEyeDetection(object):
 		plt.show()
 
 		# Extract the face and eye coordinates.
-		returnValue = self.extractSingleFaceAndEyeCoordsFromImage(image)
+		returnValue = self.extractImagesOfFaceAndEyes(image)
 		if returnValue != False:
 			faceCoords, leftEyeCoords, rightEyeCoords, binaryOverlap = returnValue
 		else:
@@ -228,7 +293,7 @@ class FaceEyeDetection(object):
 		rightEyeImage = cv2.resize(rightEyeImage, (256, 256))
 
 		plt.figure()
-		plt.imshow(faceImage, cmap='jet')
+		plt.imshow(faceImage, cmap='gray')
 		
 		plt.figure()
 		plt.imshow(leftEyeImage, cmap='gray')
@@ -239,14 +304,32 @@ class FaceEyeDetection(object):
 		plt.show()
 
 	def turnImageIntoSquare(self, image):
+		""" Obtain center portion of an image.
+			@param image The image which will be processed.
+
+			@return image The processed image.
+		"""
+
 		### ASDF -> Untested for all combos of height/width (even/odd)
+
+		# Obtain the dimensions of the image.
 		height, width, depth = image.shape
+
+		# Calculate difference between width or height.
 		if height > width:
+
+			# Compute the numeber of pixels difference.
 			difference = height-width
+
+			# If difference is even.
 			if difference%2 == 0:
+
+				# Obtain center portion of the image.
 				image = image[difference//2:-difference//2, :]
 			else:
 				image = image[difference//2:-difference//2+1,:]
+
+		# Might have issues with following code.
 		elif height < width:
 			difference = width-height
 			if difference%2 == 0:
@@ -258,7 +341,14 @@ class FaceEyeDetection(object):
 		return image
 
 	def computeBinaryOverlap(self, image, faceCoords, leftEyeCoords=None, rightEyeCoords=None):
-		""" Compute the overlap between the image and the face coordinates """
+		""" Compute the overlap between the image and the face coordinates.
+			@param image The image whose binary overlap will be determined.
+			@param faceCoords The coordinates of the face.
+			@param leftEyeCoords The coordinates of the left eye.
+			@param rightEyeCoords The cordinates of the right eye.
+
+			@return binaryOverlap A binary image with the face overlapped on the image.
+		"""
 
 		# Obtain the shape.
 		height, width, depth = image.shape
@@ -275,6 +365,7 @@ class FaceEyeDetection(object):
 		# Set the face coordinates to 1.
 		binaryOverlap[y:y+h, x:x+w] = 1.0
 
+		### CODE TO OVERLAY EYES ON IMAGE AS WELL ###
 		# if leftEyeCoords == None and rightEyeCoords == None:
 		# 	return binaryOverlap
 		# else:
@@ -305,6 +396,16 @@ class FaceEyeDetection(object):
 		return binaryOverlap
 
 	def extractImagesOfFaceAndEyes(self, imageFile):
+		"""	Extract the face, eyes, and binary overlap images.
+			@param The filepath to the image.
+
+			@return faceImage, leftEyeImage, rightEyeImage, binaryOverlap
+				faceImage: Image of the face.
+				leftEyeImage: Image of left eye.
+				rightEyeImage: Image of right eye.
+				binaryOverlap: Face image overlayed on a centered version of the original image.
+			
+		"""
 
 		faceRectangleExpansion = 0.20
 		eyeRectangleHeightExpansion = 1.0
@@ -343,7 +444,10 @@ class FaceEyeDetection(object):
 		return faceImage, leftEyeImage, rightEyeImage, binaryOverlap
 
 	def loopThroughImagesUntilAssertionError(self, imageDir, numberImages):
-		""" Tests to see how many images do not detect 1 face. """
+		""" Tests to see how many images do not detect 1 face. 
+			@param imageDir Path to directory where images are kept.
+			@param numberImages Number of images that we will test. 
+		"""
 
 		# Counters to see how many times extraction was or was not successful.
 		numTrue = 0
@@ -377,6 +481,11 @@ class FaceEyeDetection(object):
 			print("Current ratio -- true/false: ", numTrue/float(index),'/',numFalse/float(index))
 
 	def saveFaceAndEyes(self, imageDir, outfileDir, numberImages):
+		""" Save the face, eye, and binary overlap images to disk.
+			@param imageDir The path to the directory where the images to processed are kept.
+			@param outfileDir The path to the directory where the face, eye, binary overlap images will be saved.
+			@param numberImages The number of images that we want to read and then save.
+		"""
 
 		# Counters to see how many times extraction was or was not successful.
 		numTrue = 0
@@ -414,7 +523,16 @@ class FaceEyeDetection(object):
 
 
 	def getImagePartsFromCoords(self, image, faceCoords, leftEyeCoords, rightEyeCoords):
-		""" For an image, get the different subimages of the face and eyes. """
+		""" For an image, get the different subimages of the face and eyes. 
+			@param image Image where sub parts will be obtained from.
+			@param faceCoords The coordinates of the face.
+			@param leftEyeCoords The coordinates of the left eye.
+			@param rightEyeCoords The cordinates of the right eye.
+
+			@return faceImage, leftEyeImage, rightEyeImage	faceImage: Image of the face.
+															leftEyeImage: Image of left eye.
+															rightEyeImage: Image of right eye.
+		"""
 
 		# Make a copy of the image.
 		tmp_image = deepcopy(image)
@@ -444,6 +562,19 @@ class FaceEyeDetection(object):
 		return faceImage, leftEyeImage, rightEyeImage
 
 	def expandCoords(self, coords, xExpand, yExpand):
+		""" Expand the coordinates of the bounding box.
+
+		    @param coords Coordinates of a bounding box.
+		    @param xExpand The amount we want to make the bounding box bigger in
+		    			   the x direction.
+			@param xExpand The amount we want to make the bounding box bigger in
+		    			   the x direction.		    			  
+
+		    @return (xMinus, yMinus, wNew, hnew)	xMinus: x coordinate of rectangle.
+													yMinus: y coordinate of rectangle.
+													wNew: width 
+													hNew: height
+		"""
 
 		# Get the coordinates.
 		x = coords[0]
@@ -463,8 +594,18 @@ class FaceEyeDetection(object):
 
 
 	def expandCoordsMakeRatioEven(self, coords, xExpand):
-		""" Obtain a larger bounding box as represented by the coordinates.
-		    However, make the """
+		""" Expand the coordinates of the bounding box while forcing the amount
+			pixels to keep in the y direction equal to the x direction.
+
+		    @param coords Coordinates of a bounding box.
+		    @param xExpand The amount we want to make the bounding box bigger in
+		    			   the x direction.
+
+		    @return (xMinus, yMinus, wNew, hnew)	xMinus: x coordinate of rectangle.
+													yMinus: y coordinate of rectangle.
+													wNew: width 
+													hNew: height
+		"""
 
 		# Get the coordinates.
 		x = coords[0]
@@ -493,18 +634,16 @@ class FaceEyeDetection(object):
 
 		return (xMinus, yMinus, wNew, hNew)	
 
-
 	def convertDlibRectangleToOpencvCoords(self, rectangle):
-		""" 
-			Convert the member variables of Dlib's rectangle to
+		""" Convert the member variables of Dlib's rectangle to
 			coordinates, i.e. (x, y, w, h), which OpenCV uses.
 
 			@param	rectangle Dlib rectangle
+
 			@return (x,y,w,h)	x: x coordinate of rectangle.
 								y: y coordinate of rectangle.
 								w: width 
 								h: height
-								
 		"""
 
 		# Get the coordinates.
@@ -516,11 +655,11 @@ class FaceEyeDetection(object):
 		return (x, y, w, h)
 
 	def convertDlibLandmarksToCoords(self, landmarks, dtype="int"):
-		"""
-			Obtain the x,y coordinates of the landmarks and then set them to an
+		""" Obtain the x,y coordinates of the landmarks and then set them to an
 			array of tuples.
 
 			@param landmarks The facial landmarks on the face region of an image.
+
 			@return A list of (x,y) tuples corresponding to the coordinates of each landmark.
 		"""
 
