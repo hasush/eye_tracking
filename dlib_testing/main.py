@@ -31,26 +31,26 @@ def main():
 	# # Draw rectangles on the faces and eyes within an image.
 	# fed.drawRectanglesOnFacesAndEyes(imageFile)
 
-	# Extract face and eye regions and then display.
-	fed.showImagesOfFaceAndEyes(imageFile)
+	# # Extract face and eye regions and then display.
+	# fed.showImagesOfFaceAndEyes(imageFile)
 
 	# fed.loopThroughImagesUntilAssertionError('/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/run2/', 39006)
 
-	# returnValue = fed.extractImagesOfFaceAndEyes(imageFile)
+	returnValue = fed.extractImagesOfFaceAndEyes(imageFile)
 
-	# print(type(returnValue[0]))
-	# print(returnValue[0].shape)
+	print(type(returnValue[0]))
+	print(returnValue[0].shape)
 
 	
-	# plt.figure()
-	# plt.imshow(returnValue[0])
-	# plt.figure()
-	# plt.imshow(returnValue[1])
-	# plt.figure()
-	# plt.imshow(returnValue[2])
-	# plt.figure()
-	# plt.imshow(returnValue[3])
-	# plt.show()
+	plt.figure()
+	plt.imshow(returnValue[0])
+	plt.figure()
+	plt.imshow(returnValue[1])
+	plt.figure()
+	plt.imshow(returnValue[2])
+	plt.figure()
+	plt.imshow(returnValue[3])
+	plt.show()
 
 	# outfile = '/home/gsandh16/Documents/gazeTracking/data/unrealSyntheticImages/test.npz' 
 	# np.savez(outfile, faceImage=returnValue[0], leftEyeImage=returnValue[1], rightEyeImage=returnValue[2])

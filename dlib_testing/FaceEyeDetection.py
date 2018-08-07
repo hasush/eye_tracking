@@ -262,35 +262,7 @@ class FaceEyeDetection(object):
 			@param imageFile The filepath to the image.
 		"""
 
-		faceRectangleExpansion = 0.20
-		eyeRectangleHeightExpansion = 1.0
-		eyeRectangleWidthExpansion = 0.3
-
-		# Read in the image.
-		image = self.readImage(imageFile)
-
-		plt.imshow(image)
-		plt.show()
-
-		# Extract the face and eye coordinates.
-		returnValue = self.extractImagesOfFaceAndEyes(image)
-		if returnValue != False:
-			faceCoords, leftEyeCoords, rightEyeCoords, binaryOverlap = returnValue
-		else:
-			return False
-
-		# Expand the coordinates of the rectangles.
-		faceCoords = self.expandCoords(faceCoords, faceRectangleExpansion, faceRectangleExpansion)
-		leftEyeCoords = self.expandCoordsMakeRatioEven(leftEyeCoords, eyeRectangleWidthExpansion)
-		rightEyeCoords = self.expandCoordsMakeRatioEven(rightEyeCoords, eyeRectangleWidthExpansion)
-
-		# Get the subparts of the images corresponding to the rectangles.
-		faceImage, leftEyeImage, rightEyeImage = self.getImagePartsFromCoords(image, faceCoords, leftEyeCoords, rightEyeCoords)
-
-		# Resize.
-		faceImage = cv2.resize(faceImage, (512, 512))
-		leftEyeImage = cv2.resize(leftEyeImage, (256, 256))
-		rightEyeImage = cv2.resize(rightEyeImage, (256, 256))
+		faceImage, leftEyeImage, rightEyeImage, binaryOverlap = self.extractImagesOfFaceAndEyes(imageFile)
 
 		plt.figure()
 		plt.imshow(faceImage, cmap='gray')
